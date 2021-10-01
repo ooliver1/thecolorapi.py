@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Config based
+*.json
+
+# Extension based
+.history/

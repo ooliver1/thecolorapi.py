@@ -25,7 +25,9 @@ from typing import (
     Any,
     ClassVar,
     Dict,
+    List,
     Optional,
+    Tuple,
     Union
 )
 
@@ -33,6 +35,7 @@ import requests
 
 from . import utils
 from . import __version__
+from .types import Response
 from .errors import HTTPException
 
 
@@ -46,7 +49,7 @@ class Route:
         self.url: str = url
 
 
-async def json_or_text(response: requests.Response) -> Union[Dict[str, Any], str]:
+def json_or_text(response: requests.Response) -> Union[Dict[str, Any], str]:
     text = response.text(encoding='utf-8')
     try:
         if response.headers['content-type'] == 'application/json':
@@ -66,7 +69,7 @@ class HTTPClient:
             __version__, sys.version_info_)
         self.__session: requests.Session = requests.Session()
 
-    async def request(
+    def request(
         self,
         route: Route,
         **kwargs: Any
@@ -78,12 +81,12 @@ class HTTPClient:
             "User-Agent": self.user_agent,
         }
 
-        kwargs['headers'] = headers
+        kwargs["headers"] = headers
 
         for tries in range(5):
             try:
                 with self.__session.request(method, url, **kwargs) as response:
-                    data = await json_or_text(response)
+                    data = json_or_text(response)
                     if 300 > response.status >= 200:
                         return data
 
@@ -96,3 +99,15 @@ class HTTPClient:
 
         if response is not None:
             raise HTTPException(response, data)
+
+    def fetch_color(
+        self,
+        params: Union[Dict[str, str], List[Tuple[str, str]]]
+    ) -> Response:
+        return self.request(Route("GET", "/id"), params=params)
+
+    def fetch_scheme(
+        self,
+        params: Union[Dict[str, str], List[Tuple[str, str]]]
+    ) -> Response:
+        return self.request(Route("GET", "/scheme"), params=params)
